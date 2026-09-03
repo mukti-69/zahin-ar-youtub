@@ -74,6 +74,35 @@ jobs:
           echo "files=$json_array"
           echo "files=$json_array" >> "$GITHUB_OUTPUT"
 
+  publish-release:
+    # Publishes a GitHub Release after every push to main, tagged with the
+    # same run-number-based version the app was just built with (see
+    # app/build.gradle and NewVersionWorker.kt). The in-app update checker
+    # polls this repo's Releases API, so this is what makes "push new code
+    # -> app detects an update" work end-to-end. Skipped on pull_request
+    # builds (no release should be published for unmerged code).
+    runs-on: ubuntu-latest
+    needs: build-client
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+    steps:
+      - name: Download APKs
+        uses: actions/download-artifact@v4
+        with:
+          name: all-apks-in-one(intermediates)
+          path: apks
+          merge-multiple: true
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v5.3.1-beta${{ github.run_number }}
+          name: Zahin ar YouTube 5.3.1-beta${{ github.run_number }}
+          prerelease: true
+          files: apks/*.apk
+          generate_release_notes: true
+
   upload-apk:
     runs-on: ubuntu-latest
     needs: build-client
