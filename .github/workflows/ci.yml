@@ -99,7 +99,7 @@ jobs:
         with:
           tag_name: v5.3.1-beta${{ github.run_number }}
           name: Zahin ar YouTube 5.3.1-beta${{ github.run_number }}
-          prerelease: true
+          prerelease: false
           files: apks/*.apk
           generate_release_notes: true
 
