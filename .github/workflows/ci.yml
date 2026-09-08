@@ -54,16 +54,20 @@ jobs:
           ./gradlew assembleDebug lintDebug --stacktrace -DskipFormatKtlint 2>&1 | tee /tmp/build.log
 
       - name: Show build errors if failed
-        if: steps.build.outcome == 'failure'
+        if: always()
         run: |
-          tail -c 8000 /tmp/build.log > /tmp/last_build_error.txt
+          echo '=== ls debug output dir ===' > /tmp/last_build_error.txt
+          ls -la PipePipeClient/app/build/outputs/apk/debug/ >> /tmp/last_build_error.txt 2>&1 || true
+          echo '=== ls apk root dir ===' >> /tmp/last_build_error.txt
+          find PipePipeClient/app/build/outputs -iname "*.apk" >> /tmp/last_build_error.txt 2>&1 || true
+          echo '=== build.log tail ===' >> /tmp/last_build_error.txt
+          tail -c 8000 /tmp/build.log >> /tmp/last_build_error.txt
           git config user.email "ci@zahin-dev.local"
           git config user.name "CI Diagnostics"
           cp /tmp/last_build_error.txt last_build_error.txt
           git add last_build_error.txt
-          git commit -m "CI: dump last build error for diagnosis [skip ci]"
+          git commit -m "CI: dump build diagnostics [skip ci]"
           git push origin HEAD:main
-          exit 1
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
