@@ -22,6 +22,8 @@ on:
 jobs:
   build-client:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       files: ${{ steps.step-output.outputs.files }}
     steps:
@@ -45,9 +47,23 @@ jobs:
           cache: 'gradle'
 
       - name: Build debug APK
+        id: build
+        continue-on-error: true
         run: |
           cd PipePipeClient
-          ./gradlew assembleDebug lintDebug --stacktrace -DskipFormatKtlint
+          ./gradlew assembleDebug lintDebug --stacktrace -DskipFormatKtlint 2>&1 | tee /tmp/build.log
+
+      - name: Show build errors if failed
+        if: steps.build.outcome == 'failure'
+        run: |
+          tail -c 8000 /tmp/build.log > /tmp/last_build_error.txt
+          git config user.email "ci@zahin-dev.local"
+          git config user.name "CI Diagnostics"
+          cp /tmp/last_build_error.txt last_build_error.txt
+          git add last_build_error.txt
+          git commit -m "CI: dump last build error for diagnosis [skip ci]"
+          git push origin HEAD:main
+          exit 1
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
