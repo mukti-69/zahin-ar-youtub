@@ -60,8 +60,10 @@ jobs:
           ls -la PipePipeClient/app/build/outputs/apk/debug/ >> /tmp/last_build_error.txt 2>&1 || true
           echo '=== ls apk root dir ===' >> /tmp/last_build_error.txt
           find PipePipeClient/app/build/outputs -iname "*.apk" >> /tmp/last_build_error.txt 2>&1 || true
+          echo '=== build.log grep for FAILURE/error context ===' >> /tmp/last_build_error.txt
+          grep -n -B5 -A80 "FAILURE:\|^e: \|error:" /tmp/build.log >> /tmp/last_build_error.txt 2>&1 || true
           echo '=== build.log tail ===' >> /tmp/last_build_error.txt
-          tail -c 8000 /tmp/build.log >> /tmp/last_build_error.txt
+          tail -c 4000 /tmp/build.log >> /tmp/last_build_error.txt
           git config user.email "ci@zahin-dev.local"
           git config user.name "CI Diagnostics"
           cp /tmp/last_build_error.txt last_build_error.txt
